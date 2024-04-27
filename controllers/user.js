@@ -20,5 +20,22 @@ class User {
       throw err;
     }
   }
+  static async loginCheck(db, uname,pass) {
+    try {
+      const user = await db.users.findOne({ where: {username: uname} });
+      if (!user) {
+          return false;
+      }
+      console.log(user.password===pass);
+      if (user.password === pass) {
+        return { success: true, user: user };
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking login:', error);
+      throw error;
+    }
+  }
 }
 export default User;

@@ -17,4 +17,4 @@ app.listen(port, () => {
   console.log("sucessful on port " + port);
 });
 
-app.use("/", createRoute);
+app.use("/user", createRoute);
