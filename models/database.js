@@ -1,5 +1,6 @@
 import dbConfig from "./config.js";
  import users from "./users.js";
+ import prods from "./Prods.js";
 import Sequelize  from "sequelize";
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
@@ -26,6 +27,7 @@ db.Sequelize = Sequelize;
 db.sequelize=sequelize;
 
 db.users=users(sequelize);
+db.prods=prods(sequelize);
 
 
 sequelize.sync({ force: false, alter: true }).then(() => {
