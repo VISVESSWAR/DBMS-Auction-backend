@@ -2,7 +2,7 @@ import db from "../models/database.js";
 import express from "express";
 import User from "../controllers/user.js";
 import Prod from "../controllers/prod.js";
-//const user=require("../controllers/user.js");
+import user from "../models/users.js";
 
 const router = express.Router();
 router.use(express.json());
@@ -35,7 +35,7 @@ router.post("/login", async (req, res) => {
     );
     console.log(newLogin);
     if (newLogin) {
-      res.status(200).json({ message: "successfully login data entered" });
+      res.status(200).json(req.body.username);
     } else {
       res.status(500).json({ message: "Failed to send login data" });
     }
@@ -60,6 +60,25 @@ router.post("/prod_ins", async (req, res) => {
   }
 });
 
+router.get("/:username", async (req, res) => {
+  
+  try {
+    console.log("user params:",req.params.username);
+    console.log("usermodel:"+user);
+    const User=user(db.sequelize);
+    const fetchedData = await User.findOne({
+      where: { username: req.params.username },
+    });
+    if (!fetchedData) {
+      res.status(404).json({ error: "user not found" });
+    } else {
+      res.status(200).json(fetchedData);
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "failed to fetch user data" });
+  }
+});
 // router.post("/users/:userId", async (req, res) => {
 //   const { userId } = req.params;
 
@@ -80,10 +99,7 @@ router.post("/prod_ins", async (req, res) => {
 //   }
 // });
 
-
 // // Route to get user biodata
 // router.get('?', User.getUserBiodata);
-
-
 
 export default router;
