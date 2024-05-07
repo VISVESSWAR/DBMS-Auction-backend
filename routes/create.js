@@ -88,27 +88,82 @@ router.get("/:username", async (req, res) => {
     res.status(500).json({ error: "failed to fetch user data" });
   }
 });
-// router.post("/users/:userId", async (req, res) => {
-//   const { userId } = req.params;
+router.post("/userUpdate/:username", async (req, res) => {
+  try {
+    console.log("user-update details-", req.body);
+    let updquery = "UPDATE users SET ";
+    const updatedVal = [];
+    const {
+      email,
+      password,
+      firstname,
+      lastname,
+      address,
+      address2,
+      city,
+      state,
+      zipcode,
+      contact,
+    } = req.body;
+    if (email) {
+      updquery += "email=?,";
+      updatedVal.push(email);
+    }
+    if (password) {
+      updquery += "password=?,";
+      updatedVal.push(password);
+    }
+    if (firstname) {
+      updquery += " firstname = ?,";
+      updatedVal.push(firstname);
+    }
+    if (lastname) {
+      updquery += " lastname = ?,";
+      updatedVal.push(lastname);
+    }
+    if (address) {
+      updquery += " address = ?,";
+      updatedVal.push(address);
+    }
+    if (address2) {
+      updquery += " address2 = ?,";
+      updatedVal.push(address2);
+    }
+    if (city) {
+      updquery += " city = ?,";
+      updatedVal.push(city);
+    }
+    if (state) {
+      updquery += " state = ?,";
+      updatedVal.push(state);
+    }
+    if (zipcode) {
+      updquery += " zipcode= ?,";
+      updatedVal.push(zipcode);
+    }
+    if (contact) {
+      updquery += "contact = ?,";
+      updatedVal.push(contact);
+    }
+    updquery += " updatedAt = NOW(),";
+    updquery = updquery.slice(0, -1) + " WHERE username = ?";
+    updatedVal.push(req.params.username);
 
-//   try {
-//     // Fetch the user from the database by ID
-//     const user = await User.findOne({ where: { id: userId } });
-
-//     // Check if the user was found
-//     if (!user) {
-//       res.status(404).json({ error: "User not found" });
-//     } else {
-//       // Return the user data
-//       res.status(200).json(user);
-//     }
-//   } catch (error) {
-//     console.error("Error fetching user data:", error);
-//     res.status(500).json({ error: "Failed to fetch user data" });
-//   }
-// });
-
-// // Route to get user biodata
-// router.get('?', User.getUserBiodata);
+    // const query = `
+    //   UPDATE users
+    //   SET email = :email, password = :password, firstname = :firstname, lastname = :lastname,
+    //       address = :address, address2 = :address2, city = :city, state = :state, zipcode = :zipcode, contact = :contact
+    //   WHERE username = :username
+    // `;
+    await db.sequelize.query(updquery, {
+      replacements: updatedVal,
+      type: db.sequelize.QueryTypes.UPDATE,
+    });
+    return res.status(200).json({ message: "User updated successfully" });
+  } catch (err) {
+    console.error("Error updating user:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 export default router;
