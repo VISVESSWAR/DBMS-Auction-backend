@@ -3,6 +3,7 @@ import express from "express";
 import User from "../controllers/user.js";
 import Prod from "../controllers/prod.js";
 import user from "../models/users.js";
+import { QueryTypes } from "sequelize";
 
 const router = express.Router();
 router.use(express.json());
@@ -61,18 +62,26 @@ router.post("/prod_ins", async (req, res) => {
 });
 
 router.get("/:username", async (req, res) => {
-  
   try {
-    console.log("user params:",req.params.username);
-    console.log("usermodel:"+user);
-    const User=user(db.sequelize);
-    const fetchedData = await User.findOne({
-      where: { username: req.params.username },
-    });
+    console.log("user params:", req.params.username);
+    console.log("usermodel:" + user);
+    const User = user(db.sequelize);
+    // const fetchedData = await User.findOne({
+    //   where: { username: req.params.username },
+    // });
+    const fetchedData = await db.sequelize.query(
+      "SELECT * FROM users WHERE username = :username",
+      {
+        replacements: { username: req.params.username },
+        type: QueryTypes.SELECT,
+      }
+    );
+    console.log(fetchedData);
+
     if (!fetchedData) {
       res.status(404).json({ error: "user not found" });
     } else {
-      res.status(200).json(fetchedData);
+      res.status(200).json(fetchedData[0]);
     }
   } catch (err) {
     console.log(err);
