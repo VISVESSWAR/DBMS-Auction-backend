@@ -1,4 +1,4 @@
-import { DataTypes, Sequelize } from "sequelize";
+import { DataTypes, Model, Sequelize } from "sequelize";
 // import db from './database.js';
 
 const Prod = (sequelize) => {
@@ -18,9 +18,17 @@ const Prod = (sequelize) => {
     },
     username: {
       type: DataTypes.STRING(25),
+      references: {
+        model: "users",
+        key: "username",
+      },
     },
     email: {
       type: DataTypes.STRING(50),
+      references: {
+        model: "users",
+        key: "email",
+        },
     },
     password: {
       type: DataTypes.STRING(20),
@@ -28,6 +36,9 @@ const Prod = (sequelize) => {
     price: {
       type: DataTypes.BIGINT,
     },
+    // type:{
+
+    // },
     y_o_u: {
       type: DataTypes.INTEGER,
       defaultValue: null,

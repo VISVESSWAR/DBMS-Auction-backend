@@ -46,14 +46,25 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/prod_ins", async (req, res) => {
+router.post("/prod_ins/:username", async (req, res) => {
   try {
     console.log(req.body);
+    const curUser = req.params.username;
+    const userCheck = await Prod.userCheck(
+      db,
+      req.body.username,
+      req.body.password,
+      req.body.email
+    );
     const newProd = await Prod.createProd(db, req.body);
-    if (newProd) {
-      res.status(200).json({ message: "successfully added product" });
+    if (curUser === req.body.username && userCheck) {
+      if (newProd) {
+        res.status(200).json({ message: "successfully added product" });
+      } else {
+        res.status(500).json({ message: "Failed to insert product data" });
+      }
     } else {
-      res.status(500).json({ message: "Failed to insert product data" });
+      res.status(501).json({ message: "enter your user name and password" });
     }
   } catch (err) {
     console.error("Error creating product data:", err);
