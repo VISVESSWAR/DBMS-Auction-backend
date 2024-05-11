@@ -1,7 +1,7 @@
 export default{
     HOST: "localhost",
     USER: "root",
-    PASSWORD: "Vishman2@sql",
+    PASSWORD: "Hari@123",
     DB: "users",
     dialect: "mysql",
     pool: {

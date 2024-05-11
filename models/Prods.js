@@ -36,9 +36,6 @@ const Prod = (sequelize) => {
     price: {
       type: DataTypes.BIGINT,
     },
-    // type:{
-
-    // },
     y_o_u: {
       type: DataTypes.INTEGER,
       defaultValue: null,

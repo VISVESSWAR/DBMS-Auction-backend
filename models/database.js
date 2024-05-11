@@ -27,7 +27,7 @@ db.Sequelize = Sequelize;
 db.sequelize=sequelize;
 
 db.users=users(sequelize);
-db.prods=prods(sequelize);
+ db.prods=prods(sequelize);
 
 
 sequelize.sync({ force: false, alter: true }).then(() => {

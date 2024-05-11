@@ -1,5 +1,4 @@
-import { DataTypes, Sequelize } from "sequelize";
-// import db from './database.js';
+import { DataTypes } from "sequelize";
 
 const user = (sequelize) => {
   const users = sequelize.define("users", {
@@ -16,9 +15,13 @@ const user = (sequelize) => {
     username: {
       type: DataTypes.STRING(25),
       primaryKey: true,
+      // Add index for the column
+      indexes: [{ unique: true, fields: ['username'] }]
     },
     email: {
       type: DataTypes.STRING(50),
+      // Add index for the column
+      indexes: [{ unique: true, fields: ['email'] }]
     },
     password: {
       type: DataTypes.STRING(20),
@@ -48,6 +51,7 @@ const user = (sequelize) => {
       type: DataTypes.STRING,
     },
   });
+  
   return users;
 };
 export default user;
