@@ -28,7 +28,7 @@ const Prod = (sequelize) => {
       references: {
         model: "users",
         key: "email",
-        },
+      },
     },
     password: {
       type: DataTypes.STRING(20),
@@ -40,6 +40,10 @@ const Prod = (sequelize) => {
       type: DataTypes.INTEGER,
       defaultValue: null,
       allowNull: true,
+    },
+    sale_type: {
+      type: DataTypes.STRING(15),
+      defaultValue: "direct",
     },
     duration: {
       type: DataTypes.BIGINT,

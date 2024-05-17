@@ -56,8 +56,9 @@ router.post("/prod_ins/:username", async (req, res) => {
       req.body.password,
       req.body.email
     );
-    const newProd = await Prod.createProd(db, req.body);
     if (curUser === req.body.username && userCheck) {
+      const newProd = await Prod.createProd(db, req.body);
+      console.log("correct user");
       if (newProd) {
         res.status(200).json({ message: "successfully added product" });
       } else {
@@ -176,5 +177,44 @@ router.post("/userUpdate/:username", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+router.get("/products/direct_prods", async (req, res) => {
+  // const { username } = req.params; // Change this line
+  // console.log("Extracted username:", username);
+
+  try {
+    const allproductDetails = await Prod.getAllProductDetails(db);
+    console.log(allproductDetails);
+
+    if (!allproductDetails) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    res.json(allproductDetails);
+  } catch (error) {
+    console.error("Error handling request:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/products/auction_prods", async (req, res) => {
+  // const { username } = req.params; // Change this line
+  // console.log("Extracted username:", username);
+
+  try {
+    const aucproductDetails = await Prod.getAucProductDetails(db);
+    console.log(aucproductDetails);
+
+    if (!aucproductDetails) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    res.json(aucproductDetails);
+  } catch (error) {
+    console.error("Error handling request:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 export default router;

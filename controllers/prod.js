@@ -37,6 +37,40 @@ class Prod {
       throw error;
     }
   }
+  static async getAllProductDetails(db) {
+    try {
+      const AllproductDetails = await db.prods.sequelize.query(
+        "SELECT * FROM Prods WHERE sale_type='direct'"
+      );
+      if (AllproductDetails) {
+        console.log("Success fetching all the product details ");
+        console.log(AllproductDetails);
+      } else {
+        console.log("Failure: No product found ");
+      }
+      return AllproductDetails[0];
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      throw error;
+    }
+  }
+  static async getAucProductDetails(db) {
+    try {
+      const AucproductDetails = await db.prods.sequelize.query(
+        "SELECT * FROM Prods WHERE sale_type='auction'"
+      );
+      if (AucproductDetails) {
+        console.log("Success fetching all the product details ");
+        console.log(AucproductDetails);
+      } else {
+        console.log("Failure: No product found ");
+      }
+      return AucproductDetails[0];
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      throw error;
+    }
+  }
 }
 
 export default Prod;
