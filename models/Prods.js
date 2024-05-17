@@ -44,6 +44,11 @@ const Prod = (sequelize) => {
     duration: {
       type: DataTypes.BIGINT,
     },
+    sold_status:
+    {
+      type: DataTypes.STRING,
+      defaultValue: 'false',
+    }
   });
   return prods;
 };
