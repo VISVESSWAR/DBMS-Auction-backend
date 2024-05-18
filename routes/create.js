@@ -4,16 +4,31 @@ import User from "../controllers/user.js";
 import Prod from "../controllers/prod.js";
 import user from "../models/users.js";
 import { QueryTypes } from "sequelize";
+import multer from "multer";
+import path from "path";
 
 const router = express.Router();
 router.use(express.json());
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage: storage });
+
+// Route to register a user
 router.post("/register", async (req, res) => {
   try {
     console.log(req.body);
+    console.log(req.body.duration);
     const newUser = await User.createUser(db, req.body);
     if (newUser) {
-      res.status(200).json({ message: "successfully registered" });
+      res.status(200).json({ message: "Successfully registered" });
     } else {
       res.status(500).json({ message: "Failed to insert data" });
     }
@@ -23,11 +38,12 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// Route to login a user
 router.post("/login", async (req, res) => {
   try {
     console.log(req.body.password, req.body.username);
-    if (!req.body) {
-      alert("enter valid username or password");
+    if (!req.body.username || !req.body.password) {
+      return res.status(400).json({ message: "Enter valid username and password" });
     }
     const newLogin = await User.loginCheck(
       db,
@@ -38,7 +54,7 @@ router.post("/login", async (req, res) => {
     if (newLogin) {
       res.status(200).json(req.body.username);
     } else {
-      res.status(500).json({ message: "Failed to send login data" });
+      res.status(401).json({ message: "Authentication failed" });
     }
   } catch (err) {
     console.error("Error logging in user data:", err);
@@ -46,26 +62,38 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/prod_ins/:username", async (req, res) => {
+// Route to create a product with multiple images
+router.post('/prod_ins/:username', upload.array('images', 10), async (req, res) => {
   try {
+    console.log(req.files);
     console.log(req.body);
     const curUser = req.params.username;
-    const userCheck = await Prod.userCheck(
-      db,
-      req.body.username,
-      req.body.password,
-      req.body.email
-    );
+    
+    // Check user validity
+    const userCheck = await Prod.userCheck(db, req.body.username, req.body.password, req.body.email);
     if (curUser === req.body.username && userCheck) {
-      const newProd = await Prod.createProd(db, req.body);
-      console.log("correct user");
+      // Map uploaded files to their paths
+      const imagePaths = req.files ? req.files.map(file => 'uploads/' + file.filename) : [];
+
+      if (req.body.sale_type === 'direct') {
+        delete req.body.duration;
+      }
+      
+      // Create the product with the provided details including image paths
+      const newProdData = {
+        ...req.body,
+        image_paths: imagePaths.join(', '), // Storing as comma-separated string
+      };
+      req.body.duration = req.body.duration || null;
+      const newProd = await Prod.createProd(db, newProdData);
+      
       if (newProd) {
-        res.status(200).json({ message: "successfully added product" });
+        res.status(200).json({ message: "Successfully added product" });
       } else {
         res.status(500).json({ message: "Failed to insert product data" });
       }
     } else {
-      res.status(501).json({ message: "enter your user name and password" });
+      res.status(401).json({ message: "Enter your username and password correctly" });
     }
   } catch (err) {
     console.error("Error creating product data:", err);
@@ -73,14 +101,11 @@ router.post("/prod_ins/:username", async (req, res) => {
   }
 });
 
+// Route to get a user by username
 router.get("/:username", async (req, res) => {
   try {
     console.log("user params:", req.params.username);
-    console.log("usermodel:" + user);
     const User = user(db.sequelize);
-    // const fetchedData = await User.findOne({
-    //   where: { username: req.params.username },
-    // });
     const fetchedData = await db.sequelize.query(
       "SELECT * FROM users WHERE username = :username",
       {
@@ -90,17 +115,19 @@ router.get("/:username", async (req, res) => {
     );
     console.log(fetchedData);
 
-    if (!fetchedData) {
-      res.status(404).json({ error: "user not found" });
+    if (!fetchedData || fetchedData.length === 0) {
+      res.status(404).json({ error: "User not found" });
     } else {
       res.status(200).json(fetchedData[0]);
     }
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "failed to fetch user data" });
+    console.error("Failed to fetch user data:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
-router.post("/userUpdate/:username", async (req, res) => {
+
+// Route to update a user by username
+router.post("/userUpdate/:username", upload.array('images', 10), async (req, res) => {
   try {
     console.log("user-update details-", req.body);
     let updquery = "UPDATE users SET ";
@@ -117,6 +144,7 @@ router.post("/userUpdate/:username", async (req, res) => {
       zipcode,
       contact,
     } = req.body;
+
     if (email) {
       updquery += "email=?,";
       updatedVal.push(email);
@@ -157,16 +185,15 @@ router.post("/userUpdate/:username", async (req, res) => {
       updquery += "contact = ?,";
       updatedVal.push(contact);
     }
-    updquery += " updatedAt = NOW(),";
-    updquery = updquery.slice(0, -1) + " WHERE username = ?";
+    if (req.body.image_paths) {
+      updquery += "image_paths = ?,";
+      updatedVal.push(req.body.image_paths);
+    }
+
+    updquery += " updatedAt = NOW() ";
+    updquery += " WHERE username = ?";
     updatedVal.push(req.params.username);
 
-    // const query = `
-    //   UPDATE users
-    //   SET email = :email, password = :password, firstname = :firstname, lastname = :lastname,
-    //       address = :address, address2 = :address2, city = :city, state = :state, zipcode = :zipcode, contact = :contact
-    //   WHERE username = :username
-    // `;
     await db.sequelize.query(updquery, {
       replacements: updatedVal,
       type: db.sequelize.QueryTypes.UPDATE,
@@ -178,10 +205,8 @@ router.post("/userUpdate/:username", async (req, res) => {
   }
 });
 
+// Route to get all products
 router.get("/products/direct_prods", async (req, res) => {
-  // const { username } = req.params; // Change this line
-  // console.log("Extracted username:", username);
-
   try {
     const allproductDetails = await Prod.getAllProductDetails(db);
     console.log(allproductDetails);
@@ -197,10 +222,8 @@ router.get("/products/direct_prods", async (req, res) => {
   }
 });
 
+// Route to get auction products
 router.get("/products/auction_prods", async (req, res) => {
-  // const { username } = req.params; // Change this line
-  // console.log("Extracted username:", username);
-
   try {
     const aucproductDetails = await Prod.getAucProductDetails(db);
     console.log(aucproductDetails);
@@ -215,6 +238,5 @@ router.get("/products/auction_prods", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 export default router;
