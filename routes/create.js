@@ -4,6 +4,8 @@ import User from "../controllers/user.js";
 import Prod from "../controllers/prod.js";
 import user from "../models/users.js";
 import { QueryTypes } from "sequelize";
+import multer from "multer";
+import path from "path";
 
 const router = express.Router();
 router.use(express.json());
@@ -203,13 +205,11 @@ router.post("/userUpdate/:username", upload.array('images', 10), async (req, res
   }
 });
 
-router.get("/products/direct_prods/:user", async (req, res) => {
-  const  username  = req.params; // Change this line
- // console.log("Extracted username:", username);
-
- try {
-   const allproductDetails = await Prod.getAllProductDetails(db,username);
-   console.log(allproductDetails);
+// Route to get all products
+router.get("/products/direct_prods", async (req, res) => {
+  try {
+    const allproductDetails = await Prod.getAllProductDetails(db);
+    console.log(allproductDetails);
 
    if (!allproductDetails) {
      return res.status(404).json({ error: "Product not found" });
@@ -222,78 +222,19 @@ router.get("/products/direct_prods/:user", async (req, res) => {
  }
 });
 
+// Route to get auction products
+router.get("/products/auction_prods", async (req, res) => {
+  try {
+    const aucproductDetails = await Prod.getAucProductDetails(db);
+    console.log(aucproductDetails);
 
-router.get("/products/auction_prods/:user", async (req, res) => {
-  const username  = req.params.user; // Change this line
- // console.log("Extracted username:", username);
-
- try {
-   const aucproductDetails = await Prod.getAucProductDetails(db,username);
-   console.log(aucproductDetails);
-
-   if (!aucproductDetails) {
-     return res.status(404).json({ error: "Products not found" });
-   }
+    if (!aucproductDetails) {
+      return res.status(404).json({ error: "Product not found" });
+    }
 
    res.json(aucproductDetails);
  } catch (error) {
    console.error("Error handling request:", error);
-   res.status(500).json({ error: "Internal server error" });
- }
-});
-
-router.get("/products/:pname", async (req, res) => {
- const prodname = req.params.pname;
- console.log("route:", prodname);
- try {
-   const product = await Prod.viewProd(db, prodname);
-   console.log("prod:", product[0]);
-   if (product) {
-     res.json(product[0]);
-   } else {
-     return res.status(404).json({ error: "product not found" });
-   }
- } catch (error) {
-   console.log("Error handling request to view the chosen product:", error);
-   res.status(500).json({ error: "Internal server error" });
- }
-});
-
-router.post("/create-order/:pname", async (req, res) => {
- const orderId = generateUniqueId({
-   length: 10,
-   useLetters: true,
-   useNumbers: true,
- });
-
- const prodname = req.params.pname;
- const {buyer,seller}=req.body;
-
- const Price = await db.prods.sequelize.query(
-   `SELECT price FROM Prods where prod_name='${prodname}';`
- );
-
- console.log("route:", prodname, " price:", Price[0][0].price);
-
- const orderDetails = {
-   order_id: orderId,
-   prod_name: prodname,
-   buyername: buyer,
-   sellername: seller,
-   price: Price[0][0].price,
- };
- console.log("orderDetails:",orderDetails);
-
- try {
-   const Order = await Prod.createOrder(db, orderDetails);
-   console.log("order:",Order);
-   if (Order) {
-     res.json(Order);
-   } else {
-     return res.status(404).json({ error: "order unable to be created" });
-   }
- } catch (error) {
-   console.log("Error handling request to create the order:", error);
    res.status(500).json({ error: "Internal server error" });
  }
 });
