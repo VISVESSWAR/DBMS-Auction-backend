@@ -11,15 +11,20 @@ class Prod {
     }
   }
 
-  static async viewProd(db, obj) {
+  static async viewProd(db, pname) {
     try {
-      const Prods = await db.Sequelize.query(`SELECT * FROM Prods;`);
+      console.log("controller:", pname);
+      const Prods = await db.prods.sequelize.query(
+        `SELECT * FROM Prods where prod_name='${pname}';`
+      );
+      console.log("backend Prod:", Prods[0]);
       return Prods[0];
     } catch (err) {
       console.error("Error fetching the Prod:", err);
       throw err;
     }
   }
+
   static async userCheck(db, uname, pass, uemail) {
     try {
       const user = await db.users.findOne({ where: { username: uname } });
@@ -37,10 +42,11 @@ class Prod {
       throw error;
     }
   }
-  static async getAllProductDetails(db) {
+  static async getAllProductDetails(db,user) {
     try {
+      console.log(user);
       const AllproductDetails = await db.prods.sequelize.query(
-        "SELECT * FROM Prods WHERE sale_type='direct'"
+        `SELECT * FROM Prods WHERE sale_type='direct' and username!='${user.user}'`
       );
       if (AllproductDetails) {
         console.log("Success fetching all the product details ");
@@ -54,10 +60,10 @@ class Prod {
       throw error;
     }
   }
-  static async getAucProductDetails(db) {
+  static async getAucProductDetails(db,user) {
     try {
       const AucproductDetails = await db.prods.sequelize.query(
-        "SELECT * FROM Prods WHERE sale_type='auction'"
+        "SELECT * FROM Prods WHERE sale_type='auction' and username!='user'"
       );
       if (AucproductDetails) {
         console.log("Success fetching all the product details ");
@@ -69,6 +75,18 @@ class Prod {
     } catch (error) {
       console.error("Error fetching product details:", error);
       throw error;
+    }
+  }
+
+  static async createOrder(db, orderDetails) {
+    try {
+      console.log("controller create order:", orderDetails);
+      const newOrder = await db.dirprods.create(orderDetails);
+      console.log("backend Prod:", newOrder);
+      return newOrder;
+    } catch (err) {
+      console.error("Error creating the order:", err);
+      throw err;
     }
   }
 }

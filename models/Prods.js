@@ -34,7 +34,7 @@ const Prod = (sequelize) => {
       type: DataTypes.STRING(20),
     },
     price: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.FLOAT,
     },
     y_o_u: {
       type: DataTypes.INTEGER,
@@ -47,6 +47,10 @@ const Prod = (sequelize) => {
     },
     duration: {
       type: DataTypes.BIGINT,
+    },
+    sold_status: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   });
   return prods;
