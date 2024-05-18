@@ -4,8 +4,6 @@ import User from "../controllers/user.js";
 import Prod from "../controllers/prod.js";
 import user from "../models/users.js";
 import { QueryTypes } from "sequelize";
-import multer from "multer";
-import path from "path";
 
 const router = express.Router();
 router.use(express.json());
@@ -205,38 +203,43 @@ router.post("/userUpdate/:username", upload.array('images', 10), async (req, res
   }
 });
 
-// Route to get all products
 router.get("/products/direct_prods", async (req, res) => {
+  // const { username } = req.params; // Change this line
+  // console.log("Extracted username:", username);
+
   try {
-    const allproductDetails = await Prod.getAllProductDetails(db);
+    const allproductDetails = await Prod.getAllProductDetails(db,username);
     console.log(allproductDetails);
 
-   if (!allproductDetails) {
-     return res.status(404).json({ error: "Product not found" });
-   }
-
-   res.json(allproductDetails);
- } catch (error) {
-   console.error("Error handling request:", error);
-   res.status(500).json({ error: "Internal server error" });
- }
-});
-
-// Route to get auction products
-router.get("/products/auction_prods", async (req, res) => {
-  try {
-    const aucproductDetails = await Prod.getAucProductDetails(db);
-    console.log(aucproductDetails);
-
-    if (!aucproductDetails) {
+    if (!allproductDetails) {
       return res.status(404).json({ error: "Product not found" });
     }
 
-   res.json(aucproductDetails);
- } catch (error) {
-   console.error("Error handling request:", error);
-   res.status(500).json({ error: "Internal server error" });
- }
+    res.json(allproductDetails);
+  } catch (error) {
+    console.error("Error handling request:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
+
+router.get("/products/auction_prods", async (req, res) => {
+  // const { username } = req.params; // Change this line
+  // console.log("Extracted username:", username);
+
+  try {
+    const aucproductDetails = await Prod.getAucProductDetails(db,username);
+    console.log(aucproductDetails);
+
+    if (!aucproductDetails) {
+      return res.status(404).json({ error: "Products not found" });
+    }
+
+    res.json(aucproductDetails);
+  } catch (error) {
+    console.error("Error handling request:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 export default router;
