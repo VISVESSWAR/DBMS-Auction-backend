@@ -4,6 +4,8 @@ import cors from "cors";
 import createRoute from "./routes/create.js";
 import router from './controllers/productController.js';
 
+import path from "path";
+
 
 const app = express();
 const port = 3001;
@@ -22,3 +24,4 @@ app.listen(port, () => {
 });
 
 app.use("/user", createRoute);
+app.use('/uploads',express.static('./uploads'));
