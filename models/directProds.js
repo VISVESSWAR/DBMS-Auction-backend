@@ -21,20 +21,20 @@ const DirProd = (sequelize) => {
     },
     sellername: {
       type: DataTypes.STRING(25),
-      references: {
-        model: "users",
-        key: "username",
-      },
+      // references: {
+      //   model: "users",
+      //   key: "username",
+      // },
     },
     buyername: {
       type: DataTypes.STRING(25),
-      references: {
-        model: "users",
-        key: "username",
-      },
+      // references: {
+      //   model: "users",
+      //   key: "username",
+      // },
     },
     price: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.BIGINT,
     },
     purchasedate: {
       type: DataTypes.DATE,

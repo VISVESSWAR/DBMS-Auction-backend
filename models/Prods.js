@@ -14,12 +14,13 @@ const Prod = (sequelize) => {
     },
     prod_name: {
       type: DataTypes.STRING(30),
+      primaryKey:true,
       allowNull: false,
     },
-    prod_id: {
-      type: DataTypes.STRING(255),
-      primaryKey: true,
-    },
+    // prod_id: {
+    //   type: DataTypes.STRING(255),
+    //   primaryKey: true,
+    // },
     username: {
       type: DataTypes.STRING(25),
       allowNull: false,
@@ -28,9 +29,10 @@ const Prod = (sequelize) => {
         key: "username",
       },
     },
+
     image_paths: {
       type: DataTypes.STRING,
-      allowNull: false,
+      //allowNull: false,
     },
     email: {
       type: DataTypes.STRING(50),
@@ -39,10 +41,6 @@ const Prod = (sequelize) => {
         model: "users",
         key: "email",
       },
-    },
-    password: {
-      type: DataTypes.STRING(20),
-      allowNull: false,
     },
     price: {
       type: DataTypes.BIGINT,
