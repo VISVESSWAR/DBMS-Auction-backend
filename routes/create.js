@@ -202,7 +202,7 @@ router.get("/products/direct_prods/:user", async (req, res) => {
 
   try {
     const allproductDetails = await Prod.getAllProductDetails(db, username);
-    const allproductDetails = await Prod.getAllProductDetails(db, username);
+    
     console.log(allproductDetails);
 
     if (!allproductDetails) {
@@ -221,7 +221,6 @@ router.get("/products/auction_prods/:user", async (req, res) => {
   console.log("Extracted username:", username);
 
   try {
-    const aucproductDetails = await Prod.getAucProductDetails(db, username);
     const aucproductDetails = await Prod.getAucProductDetails(db, username);
     console.log(aucproductDetails);
 
