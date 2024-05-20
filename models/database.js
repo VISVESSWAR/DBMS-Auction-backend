@@ -31,7 +31,7 @@ db.sequelize = sequelize;
 db.users = users(sequelize);
 db.prods = prods(sequelize);
 db.dirprods = dirprods(sequelize);
-db.aucprods=aucprods(sequelize);
+db.aucprods= aucprods(sequelize);
 
 sequelize.sync({ force: false, alter: true }).then(() => {
   console.log("database connected 😀 ");

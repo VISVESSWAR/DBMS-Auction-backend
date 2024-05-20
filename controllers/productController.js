@@ -1,27 +1,20 @@
 import express from "express";
 import Prod from "../models/Prods.js"; // Assuming 'Prod' represents your product model
-// import {  Sequelize } from "sequelize";
-import { QueryTypes } from "sequelize";
 import db from "../models/database.js";
+import { QueryTypes } from "sequelize";
 
 const router = express.Router();
 
-// Move getProductDetails outside the route handler
+// Function to fetch product details
 async function getProductDetails(username) {
-  console.log(username);
   try {
-    const productDetails = await db.prods.sequelize.query(
+    const productDetails = await db.sequelize.query(
       "SELECT * FROM Prods WHERE username = :username",
       {
         replacements: { username },
         type: QueryTypes.SELECT,
       }
     );
-    if (productDetails) {
-      console.log("Success fetching product details for:", username);
-    } else {
-      console.log("Failure: No product found for username:", username);
-    }
     return productDetails;
   } catch (error) {
     console.error("Error fetching product details:", error);
@@ -29,16 +22,15 @@ async function getProductDetails(username) {
   }
 }
 
-
-
+// Route to get products by username
 router.get("/products/:username", async (req, res) => {
-  const { username } = req.params; // Change this line
+  const { username } = req.params;
   console.log("Extracted username:", username);
 
   try {
     const productDetails = await getProductDetails(username);
 
-    if (!productDetails) {
+    if (!productDetails || productDetails.length === 0) {
       return res.status(404).json({ error: "Product not found" });
     }
 
@@ -48,6 +40,5 @@ router.get("/products/:username", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 export default router;

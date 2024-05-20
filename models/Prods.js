@@ -58,14 +58,31 @@ const Prod = (sequelize) => {
       allowNull: false,
     },
     duration: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       allowNull:true,
       default:null,
+    },
+    offdoc_paths:
+    {
+      type:DataTypes.STRING,
     },
     sold_status: {
       type: DataTypes.STRING,
       defaultValue: 'false',
       allowNull: false,
+    },
+    curr_bid:{
+      type:DataTypes.BIGINT,
+      defaultValue:0,
+    },
+    highest_bidder:
+    {
+      type:DataTypes.STRING(25),
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "username",
+      },
     }
   });
 

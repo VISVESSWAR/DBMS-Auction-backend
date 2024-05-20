@@ -4,7 +4,6 @@ import cors from "cors";
 import createRoute from "./routes/create.js";
 import router from './controllers/productController.js';
 
-import path from "path";
 
 
 const app = express();

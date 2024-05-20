@@ -15,7 +15,7 @@ class Prod {
     try {
       console.log("controller:", pname);
       const Prods = await db.prods.sequelize.query(
-        `SELECT * FROM Prods where prod_name='${pname}';`
+        `SELECT * FROM Prods where prod_name='${pname}' and sold_status='false';`
       );
       console.log("backend Prod:", Prods[0]);
       return Prods[0];
@@ -42,11 +42,11 @@ class Prod {
       throw error;
     }
   }
-  static async getAllProductDetails(db,user) {
+  static async getAllProductDetails(db, user) {
     try {
       console.log(user);
       const AllproductDetails = await db.prods.sequelize.query(
-        `SELECT * FROM Prods WHERE sale_type='direct' and username!='${user.user}'`
+        `SELECT * FROM Prods WHERE sale_type='direct' and username!='${user.user}' and sold_status='false'`
       );
       if (AllproductDetails) {
         console.log("Success fetching all the product details ");
@@ -60,10 +60,11 @@ class Prod {
       throw error;
     }
   }
-  static async getAucProductDetails(db,user) {
+  static async getAucProductDetails(db, user) {
     try {
+      console.log(user);
       const AucproductDetails = await db.prods.sequelize.query(
-        "SELECT * FROM Prods WHERE sale_type='auction' and username!='user'"
+        `SELECT * FROM Prods WHERE sale_type='auction' and username!='${user}' and sold_status='false'`
       );
       if (AucproductDetails) {
         console.log("Success fetching all the product details ");
@@ -78,6 +79,7 @@ class Prod {
     }
   }
 
+  
   static async createOrder(db, orderDetails) {
     try {
       console.log("controller create order:", orderDetails);
@@ -87,8 +89,10 @@ class Prod {
     } catch (err) {
       console.error("Error creating the order:", err);
       throw err;
-    }
+      }
+    }
   }
-}
+  
+  
 
 export default Prod;
