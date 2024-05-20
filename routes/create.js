@@ -27,7 +27,7 @@ router.post("/register", async (req, res) => {
     console.log(req.body);
     const newUser = await User.createUser(db, req.body);
     if (newUser) {
-      res.status(200).json({ message: "Successfully registered" });
+      res.status(200).json({ message: "successfully registered" });
     } else {
       res.status(500).json({ message: "Failed to insert data" });
     }
@@ -40,15 +40,15 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     console.log(req.body.password, req.body.username);
-    if (!req.body.username || !req.body.password) {
-      return res.status(400).json({ message: "Enter valid username and password" });
+    if (!req.body) {
+      alert("enter valid username or password");
     }
     const newLogin = await User.loginCheck(db, req.body.username, req.body.password);
     console.log(newLogin);
     if (newLogin) {
       res.status(200).json(req.body.username);
     } else {
-      res.status(401).json({ message: "Authentication failed" });
+      res.status(500).json({ message: "Failed to send login data" });
     }
   } catch (err) {
     console.error("Error logging in user data:", err);
@@ -58,7 +58,6 @@ router.post("/login", async (req, res) => {
 
 router.post('/prod_ins/:username', upload.array('images', 10), async (req, res) => {
   try {
-    console.log(req.files);
     console.log(req.body);
     const curUser = req.params.username;
 
@@ -78,12 +77,12 @@ router.post('/prod_ins/:username', upload.array('images', 10), async (req, res) 
       const newProd = await Prod.createProd(db, newProdData);
 
       if (newProd) {
-        res.status(200).json({ message: "Successfully added product" });
+        res.status(200).json({ message: "successfully added product" });
       } else {
         res.status(500).json({ message: "Failed to insert product data" });
       }
     } else {
-      res.status(401).json({ message: "Enter your username and password correctly" });
+      res.status(501).json({ message: "enter your user name and password" });
     }
   } catch (err) {
     console.error("Error creating product data:", err);
@@ -94,7 +93,11 @@ router.post('/prod_ins/:username', upload.array('images', 10), async (req, res) 
 router.get("/:username", async (req, res) => {
   try {
     console.log("user params:", req.params.username);
+    console.log("usermodel:" + user);
     const User = user(db.sequelize);
+    // const fetchedData = await User.findOne({
+    //   where: { username: req.params.username },
+    // });
     const fetchedData = await db.sequelize.query(
       "SELECT * FROM users WHERE username = :username",
       {
@@ -104,14 +107,14 @@ router.get("/:username", async (req, res) => {
     );
     console.log(fetchedData);
 
-    if (!fetchedData || fetchedData.length === 0) {
-      res.status(404).json({ error: "User not found" });
+    if (!fetchedData) {
+      res.status(404).json({ error: "user not found" });
     } else {
       res.status(200).json(fetchedData[0]);
     }
   } catch (err) {
-    console.error("Failed to fetch user data:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.log(err);
+    res.status(500).json({ error: "failed to fetch user data" });
   }
 });
 
@@ -132,7 +135,6 @@ router.post("/userUpdate/:username", upload.array('images', 10), async (req, res
       zipcode,
       contact,
     } = req.body;
-
     if (email) {
       updquery += "email=?,";
       updatedVal.push(email);
@@ -173,15 +175,16 @@ router.post("/userUpdate/:username", upload.array('images', 10), async (req, res
       updquery += "contact = ?,";
       updatedVal.push(contact);
     }
-    if (req.body.image_paths) {
-      updquery += "image_paths = ?,";
-      updatedVal.push(req.body.image_paths);
-    }
-
-    updquery += " updatedAt = NOW() ";
-    updquery += " WHERE username = ?";
+    updquery += " updatedAt = NOW(),";
+    updquery = updquery.slice(0, -1) + " WHERE username = ?";
     updatedVal.push(req.params.username);
 
+    // const query = `
+    //   UPDATE users
+    //   SET email = :email, password = :password, firstname = :firstname, lastname = :lastname,
+    //       address = :address, address2 = :address2, city = :city, state = :state, zipcode = :zipcode, contact = :contact
+    //   WHERE username = :username
+    // `;
     await db.sequelize.query(updquery, {
       replacements: updatedVal,
       type: db.sequelize.QueryTypes.UPDATE,
@@ -198,6 +201,7 @@ router.get("/products/direct_prods/:user", async (req, res) => {
   console.log("Extracted username:", username);
 
   try {
+    const allproductDetails = await Prod.getAllProductDetails(db, username);
     const allproductDetails = await Prod.getAllProductDetails(db, username);
     console.log(allproductDetails);
 
@@ -217,6 +221,7 @@ router.get("/products/auction_prods/:user", async (req, res) => {
   console.log("Extracted username:", username);
 
   try {
+    const aucproductDetails = await Prod.getAucProductDetails(db, username);
     const aucproductDetails = await Prod.getAucProductDetails(db, username);
     console.log(aucproductDetails);
 
