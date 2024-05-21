@@ -16,7 +16,10 @@ const DirProd = (sequelize) => {
       type: DataTypes.STRING(11),
       primaryKey: true,
     },
-    prod_name: {
+    car_brand: {
+      type: DataTypes.STRING,
+    },
+    car_model: {
       type: DataTypes.STRING,
     },
     sellername: {

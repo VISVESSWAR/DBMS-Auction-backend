@@ -1,26 +1,26 @@
 class Prod {
   static async createProd(db, obj) {
     try {
-      // console.log(db.users);
       console.log(obj);
+      obj.curr_bid = obj.price;
       const newProd = await db.prods.create(obj);
       return newProd;
     } catch (err) {
-      console.log("Error creating a new prod :", err);
+      console.log("Error creating a new product:", err);
       throw err;
     }
   }
 
-  static async viewProd(db, pname) {
+  static async viewProd(db, pid) {
     try {
-      console.log("controller:", pname);
-      const Prods = await db.prods.sequelize.query(
-        `SELECT * FROM Prods where prod_name='${pname}' and sold_status='false';`
+      console.log("controller:", pid);
+      const prods = await db.prods.sequelize.query(
+        `SELECT * FROM Prods WHERE prod_id = '${pid}' AND sold_status = 'false';`
       );
-      console.log("backend Prod:", Prods[0]);
-      return Prods[0];
+      console.log("backend product:", prods[0]);
+      return prods[0];
     } catch (err) {
-      console.error("Error fetching the Prod:", err);
+      console.error("Error fetching the product:", err);
       throw err;
     }
   }
@@ -31,7 +31,6 @@ class Prod {
       if (!user) {
         return false;
       }
-      console.log(user.password === pass);
       if (user.password === pass && user.email === uemail) {
         return { success: true, user: user };
       } else {
@@ -42,57 +41,68 @@ class Prod {
       throw error;
     }
   }
+
   static async getAllProductDetails(db, user) {
     try {
-      console.log(user);
-      const AllproductDetails = await db.prods.sequelize.query(
-        `SELECT * FROM Prods WHERE sale_type='direct' and username!='${user.user}' and sold_status='false'`
+      const allProductDetails = await db.prods.sequelize.query(
+        `SELECT * FROM Prods WHERE sale_type = 'direct' AND username != '${user.user}' AND sold_status = 'false';`
       );
-      if (AllproductDetails) {
-        console.log("Success fetching all the product details ");
-        console.log(AllproductDetails);
+      if (allProductDetails) {
+        console.log("Success fetching all the product details.");
+        return allProductDetails[0];
       } else {
-        console.log("Failure: No product found ");
+        console.log("Failure: No product found.");
+        return [];
       }
-      return AllproductDetails[0];
-    } catch (error) {
-      console.error("Error fetching product details:", error);
-      throw error;
-    }
-  }
-  static async getAucProductDetails(db, user) {
-    try {
-      console.log(user);
-      const AucproductDetails = await db.prods.sequelize.query(
-        `SELECT * FROM Prods WHERE sale_type='auction' and username!='${user}' and sold_status='false'`
-      );
-      if (AucproductDetails) {
-        console.log("Success fetching all the product details ");
-        console.log(AucproductDetails);
-      } else {
-        console.log("Failure: No product found ");
-      }
-      return AucproductDetails[0];
     } catch (error) {
       console.error("Error fetching product details:", error);
       throw error;
     }
   }
 
-  
+  static async getAucProductDetails(db, user) {
+    try {
+      const aucProductDetails = await db.prods.sequelize.query(
+        `SELECT * FROM Prods WHERE sale_type = 'auction' AND username != '${user}' AND sold_status = 'false';`
+      );
+      if (aucProductDetails) {
+        console.log("Success fetching all the auction product details.");
+        return aucProductDetails[0];
+      } else {
+        console.log("Failure: No product found.");
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching auction product details:", error);
+      throw error;
+    }
+  }
+
   static async createOrder(db, orderDetails) {
     try {
       console.log("controller create order:", orderDetails);
+      const st=orderDetails.saletype;
       const newOrder = await db.dirprods.create(orderDetails);
-      console.log("backend Prod:", newOrder);
-      return newOrder;
+      console.log("backend order:", newOrder);
+      return { newOrder, saletype: st };
     } catch (err) {
       console.error("Error creating the order:", err);
       throw err;
-      }
-    }
+    }
   }
-  
-  
+
+  static async createaucOrder(db, orderDetails) {
+    try {
+      console.log("controller auc create order:", orderDetails);
+      const sta=orderDetails.saletype;
+      const newOrder = await db.aucprods.create(orderDetails);
+      console.log("backend order:", newOrder);
+      return { newOrder, saletype: sta };
+    } catch (err) {
+      console.error("Error creating the order:", err);
+      throw err;
+    }
+  }
+}
 
 export default Prod;

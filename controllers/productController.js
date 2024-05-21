@@ -30,8 +30,13 @@ router.get("/products/:username", async (req, res) => {
   try {
     const productDetails = await getProductDetails(username);
 
-    if (!productDetails || productDetails.length === 0) {
+    if (!productDetails) {
       return res.status(404).json({ error: "Product not found" });
+    }
+
+    else if( productDetails.length === 0)
+      {
+        return res.status(404).json({ error: "No products sold" });
     }
 
     res.json(productDetails);

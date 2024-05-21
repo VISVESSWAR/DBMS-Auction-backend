@@ -118,7 +118,7 @@ router.get("/:username", async (req, res) => {
   }
 });
 
-router.post("/userUpdate/:username", upload.array('images', 10), async (req, res) => {
+router.post("/userUpdate/:username",  async (req, res) => {
   try {
     console.log("user-update details-", req.body);
     let updquery = "UPDATE users SET ";
@@ -215,6 +215,56 @@ router.get("/products/direct_prods/:user", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+router.get("/getAucOrder/:username", async (req, res) => {
+  try {
+    console.log("user params:", req.params.username);
+    const fetchedData = await db.sequelize.query(
+      "SELECT * FROM aucprods WHERE buyername = :username",
+      {
+        replacements: { username: req.params.username },
+        type: QueryTypes.SELECT,
+      }
+    );
+    console.log(fetchedData);
+
+    if (!fetchedData) {
+      res.status(404).json({ error: "auction order not found for user" });
+    } else {
+      res.status(200).json(fetchedData);
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "failed to fetch user auction order data" });
+  }
+});
+
+router.get("/getDirOrder/:username", async (req, res) => {
+  try {
+    console.log("user params:", req.params.username);
+    //console.log("usermodel:" + user);
+    const User = user(db.sequelize);
+    // const fetchedData = await User.findOne({
+    //   where: { username: req.params.username },
+    // });
+    const fetchedData = await db.sequelize.query(
+      "SELECT * FROM dirprods WHERE buyername = :username",
+      {
+        replacements: { username: req.params.username },
+        type: QueryTypes.SELECT,
+      }
+    );
+    console.log(fetchedData);
+
+    if (!fetchedData) {
+      res.status(404).json({ error: "user-orders not found" });
+    } else {
+      res.status(200).json(fetchedData);
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "failed to fetch user-order data" });
+  }
+});
 
 router.get("/products/auction_prods/:user", async (req, res) => {
   const username = req.params.user;
@@ -235,11 +285,11 @@ router.get("/products/auction_prods/:user", async (req, res) => {
   }
 });
 
-router.get("/products/:pname", async (req, res) => {
-  const prodname = req.params.pname;
-  console.log("route:", prodname);
+router.get("/products/:pid", async (req, res) => {
+  const prodId = req.params.pid;
+  console.log("route:", prodId);
   try {
-    const product = await Prod.viewProd(db, prodname);
+    const product = await Prod.viewProd(db, prodId);
     console.log("prod:", product[0]);
     if (product) {
       res.json(product[0]);
@@ -252,41 +302,60 @@ router.get("/products/:pname", async (req, res) => {
   }
 });
 
-router.post("/create-order/:pname", async (req, res) => {
+router.post("/create-order/:pid", async (req, res) => {
   const orderId = generateUniqueId({
     length: 10,
     useNumbers: true,
   });
 
-  const prodname = req.params.pname;
+  const prodId = req.params.pid;
   const { buyer, seller } = req.body;
 
   // Fetch the curr_bid for the product
   const Price = await db.prods.sequelize.query(
-    `SELECT curr_bid FROM Prods WHERE prod_name='${prodname}'`
+    `SELECT curr_bid FROM Prods WHERE prod_id='${prodId}'`
   );
 
+  const [set, copy1] = await db.prods.sequelize.query(
+    `SELECT price,car_brand,car_model FROM Prods where prod_id='${prodId}'`
+  );
+const product=set[0];
+  const [saletype,copy] = await db.prods.sequelize.query(
+    `SELECT sale_type FROM Prods WHERE prod_id='${prodId}'`
+  );
+  const st=saletype[0].sale_type;
+  console.log('saletype:',st);
   // If the product is not found or does not have a curr_bid, handle the error
   if (!Price[0][0] || Price[0][0].curr_bid === null) {
     return res.status(404).json({ error: "Product not found or no current bid available" });
   }
 
-  console.log("route:", prodname, " current bid:", Price[0][0].curr_bid);
+  console.log("route:", prodId, " current bid:", Price[0][0].curr_bid);
 
   const orderDetails = {
     order_id: orderId,
-    prod_name: prodname,
+    car_brand:product.car_brand,
+    car_model:product.car_model,
     buyername: buyer,
     sellername: seller,
+    saletype : st,
     price: Price[0][0].curr_bid, // Use the curr_bid for the order price
   };
   console.log("orderDetails:", orderDetails);
 
   try {
-    const Order = await Prod.createOrder(db, orderDetails);
-    console.log("order:", Order);
-    if (Order) {
-      res.json(Order);
+    let orderResponse;
+    if (st === 'direct') {
+      orderResponse = await Prod.createOrder(db, orderDetails);
+    } else {
+      orderResponse = await Prod.createaucOrder(db, orderDetails);
+    }
+
+    const { newOrder, saletype } = orderResponse;
+
+    console.log("order:", newOrder);
+    if (newOrder) {
+      res.json({ newOrder, saletype });
     } else {
       return res.status(404).json({ error: "Order unable to be created" });
     }
@@ -296,6 +365,51 @@ router.post("/create-order/:pname", async (req, res) => {
   }
 });
 
+router.post("/update-order/:order_id", async (req, res) => {
+  const orderId = req.params.order_id;
+  console.log("orderid:", orderId);
+  const { status } = req.body;
+  console.log("status:", status);
+
+  try {
+    const updateStatus = await db.dirprods.sequelize.query(`
+      update dirprods set payment_status='success' where order_id='${orderId}'`
+    );
+    if (updateStatus) {
+      res.json(updateStatus);
+    } else {
+      return res
+        .status(404)
+        .json({ error: "order status unable to be updated" });
+    }
+  } catch (error) {
+    console.log("error updating status in backend", error);
+    res.status(500).json({ error: "internal server error" });
+  }
+});
+
+router.post("/updateauc-order/:order_id", async (req, res) => {
+  const orderId = req.params.order_id;
+  console.log("orderid:", orderId);
+  const { status } = req.body;
+  console.log("status:", status);
+
+  try {
+    const updateStatus = await db.aucprods.sequelize.query(`
+      update aucprods set payment_status='success' where order_id='${orderId}'`
+    );
+    if (updateStatus) {
+      res.json(updateStatus);
+    } else {
+      return res
+        .status(404)
+        .json({ error: "order status unable to be updated" });
+    }
+  } catch (error) {
+    console.log("error updating status in backend", error);
+    res.status(500).json({ error: "internal server error" });
+  }
+});
 
 router.get("/direct-orders/:username", async (req, res) => {
   const buyername = req.params.username;
@@ -335,47 +449,47 @@ router.get("/auc-orders/:username", async (req, res) => {
   }
 });
 
-router.post("/create-bid/:pname", async (req, res) => {
-  const bidId = generateUniqueId({
-    length: 10,
-    useNumbers: true,
-  });
+// router.post("/create-bid/:pname", async (req, res) => {
+//   const bidId = generateUniqueId({
+//     length: 10,
+//     useNumbers: true,
+//   });
 
-  const prodname = req.params.pname;
-  const { buyer, seller, bid_price } = req.body;
+//   const prodname = req.params.pname;
+//   const { buyer, seller, bid_price } = req.body;
 
-  const curPrice = await db.prods.sequelize.query(
-    `SELECT price FROM Prods where prod_name='${prodname}'`
-  );
+//   const curPrice = await db.prods.sequelize.query(
+//     `SELECT price FROM Prods where prod_name='${prodname}'`
+//   );
 
-  console.log("route:", prodname, " price:", curPrice[0][0].price);
+//   console.log("route:", prodname, " price:", curPrice[0][0].price);
 
-  if (bid_price <= curPrice[0][0].price) {
-    res.status(401).json({ message: "Bid price cannot be lesser than the current price" });
-  } else {
-    const bidDetails = {
-      bid_id: bidId,
-      prod_name: prodname,
-      buyername: buyer,
-      sellername: seller,
-      price: bid_price,
-    };
-    console.log("bidDetails:", bidDetails);
+//   if (bid_price <= curPrice[0][0].price) {
+//     res.status(401).json({ message: "Bid price cannot be lesser than the current price" });
+//   } else {
+//     const bidDetails = {
+//       bid_id: bidId,
+//       prod_name: prodname,
+//       buyername: buyer,
+//       sellername: seller,
+//       price: bid_price,
+//     };
+//     console.log("bidDetails:", bidDetails);
 
-    try {
-      const Bid = await Prod.createBid(db, bidDetails);
-      console.log("order:", Bid);
-      if (Bid) {
-        res.json(Bid);
-      } else {
-        return res.status(404).json({ error: "Order unable to be created" });
-      }
-    } catch (error) {
-      console.log("Error handling request to create the order:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  }
-});
+//     try {
+//       const Bid = await Prod.createBid(db, bidDetails);
+//       console.log("order:", Bid);
+//       if (Bid) {
+//         res.json(Bid);
+//       } else {
+//         return res.status(404).json({ error: "Order unable to be created" });
+//       }
+//     } catch (error) {
+//       console.log("Error handling request to create the order:", error);
+//       res.status(500).json({ error: "Internal server error" });
+//     }
+//   }
+// });
 
 router.get("/bids/:username", async (req, res) => {
   const buyername = req.params.username;
