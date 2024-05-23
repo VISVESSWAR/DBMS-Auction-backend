@@ -90,33 +90,78 @@ router.post('/prod_ins/:username', upload.array('images', 10), async (req, res) 
   }
 });
 
+// router.get("/:username", async (req, res) => {
+//   try {
+//     console.log("user params:", req.params.username);
+//     console.log("usermodel:" + user);
+//     const User = user(db.sequelize);
+//     // const fetchedData = await User.findOne({
+//     //   where: { username: req.params.username },
+//     // });
+//     const fetchedData = await db.sequelize.query(
+//       "SELECT * FROM users WHERE username = :username",
+//       {
+//         replacements: { username: req.params.username },
+//         type: QueryTypes.SELECT,
+//       }
+//     );
+//     console.log(fetchedData);
+
+//     if (!fetchedData) {
+//       res.status(404).json({ error: "user not found" });
+//     } else {
+//       res.status(200).json(fetchedData[0]);
+//     }
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({ error: "failed to fetch user data" });
+//   }
+// });
+
 router.get("/:username", async (req, res) => {
   try {
-    console.log("user params:", req.params.username);
-    console.log("usermodel:" + user);
-    const User = user(db.sequelize);
-    // const fetchedData = await User.findOne({
-    //   where: { username: req.params.username },
-    // });
-    const fetchedData = await db.sequelize.query(
-      "SELECT * FROM users WHERE username = :username",
+    const username = req.params.username;
+
+   
+    await db.sequelize.query(
+      `CALL get_userInfo(:uname, @p_username, @p_email, @p_password, @p_firstname, @p_lastname, @p_address, @p_address2, @p_city, @p_state, @p_zipcode)`,
       {
-        replacements: { username: req.params.username },
-        type: QueryTypes.SELECT,
+        replacements: { uname: username },
+        type: db.sequelize.QueryTypes.RAW,
       }
     );
-    console.log(fetchedData);
 
-    if (!fetchedData) {
-      res.status(404).json({ error: "user not found" });
+    
+    const fetchedData = await db.sequelize.query(
+      `SELECT 
+        @p_username AS username, 
+        @p_email AS email, 
+        @p_password AS password, 
+        @p_firstname AS firstname, 
+        @p_lastname AS lastname, 
+        @p_address AS address, 
+        @p_address2 AS address2, 
+        @p_city AS city, 
+        @p_state AS state, 
+        @p_zipcode AS zipcode`,
+      {
+        type: db.sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    const userData = fetchedData[0];
+
+    if (!userData || !userData.username) {
+      res.status(404).json({ error: "User not found" });
     } else {
-      res.status(200).json(fetchedData[0]);
+      res.status(200).json(userData);
     }
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "failed to fetch user data" });
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch user data" });
   }
 });
+
 
 router.post("/userUpdate/:username",  async (req, res) => {
   try {
@@ -302,6 +347,41 @@ router.get("/products/:pid", async (req, res) => {
   }
 });
 
+// router.get("/products/:pid", async (req, res) => {
+//   try {
+//     const prodid = req.params.pid;
+
+//     // Calling the stored procedure
+//     await db.sequelize.query(
+//       `CALL get_prodInfo(:prodid, @p_id, @p_uname, @p_price, @p_you, @p_duration, @p_imagePaths, @p_saleType, @p_soldStatus, @p_carBrand, @p_carModel,@p_createdAt)`,
+//       {
+//         replacements: { prodid: prodid },
+//         type: QueryTypes.RAW,
+//       }
+//     );
+
+//     // Fetching the result from the session variables set by the stored procedure
+//     const fetchedData = await db.sequelize.query(
+//       `SELECT @p_id AS prod_id,@p_uname AS username,@p_price AS price,@p_you AS y_o_u,@p_duration AS duration,@p_imagePaths AS image_paths,@p_saleType AS sale_type,@p_soldStatus AS sold_status,@p_carBrand AS car_brand,@p_carModel AS car_model,@p_createdAt AS createdAt`,
+//       {
+//         type: QueryTypes.SELECT,
+//       }
+//     );
+
+//     const prodData = fetchedData[0];
+
+//     if (!prodData || !prodData.prod_id) {
+//       res.status(404).json({ error: "product not found" });
+//     } else {
+//       res.status(200).json(prodData);
+//     }
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Failed to fetch product data" });
+//   }
+// });
+
+
 router.post("/create-order/:pid", async (req, res) => {
   const orderId = generateUniqueId({
     length: 10,
@@ -325,7 +405,7 @@ const product=set[0];
   );
   const st=saletype[0].sale_type;
   console.log('saletype:',st);
-  // If the product is not found or does not have a curr_bid, handle the error
+ 
   if (!Price[0][0] || Price[0][0].curr_bid === null) {
     return res.status(404).json({ error: "Product not found or no current bid available" });
   }
@@ -334,12 +414,13 @@ const product=set[0];
 
   const orderDetails = {
     order_id: orderId,
+    prod_id:prodId,
     car_brand:product.car_brand,
     car_model:product.car_model,
     buyername: buyer,
     sellername: seller,
     saletype : st,
-    price: Price[0][0].curr_bid, // Use the curr_bid for the order price
+    price: Price[0][0].curr_bid, 
   };
   console.log("orderDetails:", orderDetails);
 
@@ -515,7 +596,7 @@ router.post('/products/auction_prods/curr-bid', async (req, res) => {
   const { prodID, bid, user } = req.body;
 
   try {
-    // Find the product by prodId
+    
     const product = await db.sequelize.query(
       'SELECT * FROM prods WHERE prod_id = :prodID',
       {
@@ -530,9 +611,9 @@ router.post('/products/auction_prods/curr-bid', async (req, res) => {
 
     const foundProduct = product[0];
 
-    // Check if the new bid is at least 10% higher than the current bid
+    
     if (bid >= foundProduct.curr_bid * 1.1) {
-      // Update the current bid and highest bidder
+    
       const updateResult = await db.sequelize.query(
         'UPDATE prods SET curr_bid = :bid ,highest_bidder= :user WHERE prod_id = :prodID',
         {
@@ -541,7 +622,7 @@ router.post('/products/auction_prods/curr-bid', async (req, res) => {
         }
       );
 
-      if (updateResult[1] > 0) { // updateResult[1] contains the number of rows affected
+      if (updateResult[1] > 0) { 
         res.status(200).json({ message: 'Bid successfully placed' });
       } else {
         res.status(404).json({ message: 'Product not found' });

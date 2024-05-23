@@ -16,11 +16,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
     acquire: dbConfig.pool.acquire,
     idle: dbConfig.pool.idle,
   },
-  // define: {
-  //   timestamps: true, // Set timestamps to true to automatically manage createdAt and updatedAt columns
-  //   createdAt: 'created_at', // Set the createdAt column name to 'created_at'
-  //   updatedAt: 'updated_at', // Set the updatedAt column name to 'updated_at'
-  // },
+ 
 });
 
 const db = {};

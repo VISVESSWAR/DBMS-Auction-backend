@@ -19,6 +19,13 @@ const DirProd = (sequelize) => {
     car_brand: {
       type: DataTypes.STRING,
     },
+    prod_id: {
+      type: DataTypes.STRING(255),
+      references: {
+        model: "prods",
+        key: "prod_id",
+      },
+    },
     car_model: {
       type: DataTypes.STRING,
     },

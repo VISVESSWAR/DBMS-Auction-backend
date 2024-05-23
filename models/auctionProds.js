@@ -3,7 +3,7 @@ import { DataTypes, Model, Sequelize } from "sequelize";
 
 const AucProd = (sequelize) => {
   const aucprods = sequelize.define("aucprods", {
-    // Define your user model attributes here
+    
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: new Date(),
@@ -21,6 +21,13 @@ const AucProd = (sequelize) => {
     },
     car_model: {
       type: DataTypes.STRING,
+    },
+    prod_id: {
+      type: DataTypes.STRING(255),
+      references: {
+        model: "prods",
+        key: "prod_id",
+      },
     },
     sellername: {
       type: DataTypes.STRING(25),

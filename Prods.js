@@ -3,7 +3,7 @@ import { DataTypes, Sequelize } from "sequelize";
 
 const Prods = (sequelize) => {
   const Prods = sequelize.define("Prods", {
-    // Define your user model attributes here
+   
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: new Date(),

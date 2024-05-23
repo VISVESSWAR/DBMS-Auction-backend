@@ -2,7 +2,7 @@ import { DataTypes } from "sequelize";
 
 const user = (sequelize) => {
   const users = sequelize.define("users", {
-    // Define your user model attributes here
+    
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: new Date(),
@@ -15,12 +15,12 @@ const user = (sequelize) => {
     username: {
       type: DataTypes.STRING(25),
       primaryKey: true,
-      // Add index for the column
+      
       indexes: [{ unique: true, fields: ['username'] }]
     },
     email: {
       type: DataTypes.STRING(50),
-      // Add index for the column
+      
       indexes: [{ unique: true, fields: ['email'] }]
     },
     password: {

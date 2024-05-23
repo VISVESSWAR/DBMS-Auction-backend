@@ -1,11 +1,11 @@
 import express from "express";
-import Prod from "../models/Prods.js"; // Assuming 'Prod' represents your product model
+import Prod from "../models/Prods.js"; 
 import db from "../models/database.js";
 import { QueryTypes } from "sequelize";
 
 const router = express.Router();
 
-// Function to fetch product details
+
 async function getProductDetails(username) {
   try {
     const productDetails = await db.sequelize.query(
@@ -22,7 +22,7 @@ async function getProductDetails(username) {
   }
 }
 
-// Route to get products by username
+
 router.get("/products/:username", async (req, res) => {
   const { username } = req.params;
   console.log("Extracted username:", username);

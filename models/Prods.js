@@ -1,9 +1,9 @@
 import { DataTypes } from "sequelize";
-import db from "./database.js"; // Ensure to import your Sequelize instance correctly
+import db from "./database.js"; 
 
 const Prod = (sequelize) => {
   const Prods = sequelize.define("Prods", {
-    // Define your product model attributes here
+  
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -36,18 +36,18 @@ const Prod = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    email: {
-      type: DataTypes.STRING(50),
-      allowNull: false,
-      references: {
-        model: "users",
-        key: "email",
-      },
-    },
-    password: {
-      type: DataTypes.STRING(20),
-      allowNull: false,
-    },
+    // email: {
+    //   type: DataTypes.STRING(50),
+    //   allowNull: false,
+    //   references: {
+    //     model: "users",
+    //     key: "email",
+    //   },
+    // },
+    // password: {
+    //   type: DataTypes.STRING(20),
+    //   allowNull: false,
+    // },
     price: {
       type: DataTypes.BIGINT,
       allowNull: false,
